@@ -3,15 +3,18 @@
 #include <allegro5/allegro_font.h>
 #include <allegro5/allegro_image.h>
 #include <allegro5/allegro_ttf.h>
-#include <fstream>
 #include <string>
 #include <cstdlib>
 #include <iostream>
 #include <time.h>
 #include "logic_admin.h"
+#include "SharedStates.h"
+#include "userGameData.h"
 
 using namespace std;
 
+SharedStates *sharedStates = new SharedStates();
+UserGameData userGameData;
 int main();
 void menu();
 void juego();
@@ -20,7 +23,6 @@ ALLEGRO_DISPLAY *ventana;
 ALLEGRO_KEYBOARD_STATE keyboard_state;
 ALLEGRO_MOUSE_STATE mouse_state;
 ALLEGRO_FONT *font;
-int nivel = 0, vida = 0;
 int cont_e;
 bool enter = false;
 
@@ -49,6 +51,8 @@ int main()
     al_init_image_addon();
     al_install_mouse();
     al_install_keyboard();
+
+    UserGameData userGameData; // Registra nivel y vida del jugador
 
     al_set_new_display_flags(ALLEGRO_FULLSCREEN_WINDOW);
     ventana = al_create_display(1920, 1080);
@@ -92,23 +96,6 @@ int main()
 
 void menu()
 {
-
-    // OBTENCI�N DE DATOS DEL JUGADOR
-    ofstream archivo_e;                                  // Variable para escritura de datos del archivo
-    ifstream archivo_l;                                  // Variable para lectura de datos del archivo
-    archivo_l.open("recursos/informacion.txt", ios::in); // Abrir el Archivo "informacion.txt" en modalidad de entrada de datos
-    archivo_l >> nivel >> vida;                          // Almacenamiento de datos en el archivo, dentro de las variables locales
-    if (vida == 0)                                       // Si la vida es 0, se reestablecen a los valores iniciales predeterminados y almacenarlos en el archivo
-    {
-        archivo_e.open("recursos/informacion.txt", ios::out);
-        archivo_e << "1"
-                  << " "
-                  << "500" << endl;
-        nivel = 1;
-        vida = 500;
-    }
-    archivo_e.close(); // Cerrar archivo de escritura
-    archivo_l.close(); // Cerrar archivo de lectura
 
     while (enter == false) // Mientras que No se presione uno de los botones
     {
@@ -156,7 +143,9 @@ void menu()
 
 void contadores()
 {
-    switch (nivel)
+    sharedStates->readUserGameData();
+    userGameData = sharedStates->getUserGameData();
+    switch (userGameData.nivel)
     {
     case 1:
         cont_en = 40;
@@ -174,20 +163,20 @@ void contadores()
         cont_Init = Cont;
         break;
     }
-    if (nivel != 0 && vida != 0)
+    if (userGameData.nivel != 0 && userGameData.vida != 0)
     {
         for (int i = 0; i < 4; i++)
         {
             al_draw_bitmap(cont_Init[i], 0, 0, 0);
             al_draw_text(font, al_map_rgb(255, 77, 111), 1350, 950, NULL, ("Enemigos: " + to_string(cont_en)).c_str());
-            al_draw_text(font, al_map_rgb(255, 77, 111), 1350, 980, NULL, ("Vida: " + to_string(vida)).c_str());
+            al_draw_text(font, al_map_rgb(255, 77, 111), 1350, 980, NULL, ("Vida: " + to_string(userGameData.vida)).c_str());
             al_flip_display();
             al_rest(1);
         }
         juego();
     }
 
-    if (vida == 0 || nivel == 0 || game_over == true)
+    if (userGameData.vida == 0 || userGameData.nivel == 0 || game_over == true)
     {
         for (int i = 0; i <= 2; i++)
         {
@@ -203,7 +192,7 @@ void contadores()
 void juego()
 {
     // INICIALIZACION DE INSTANCIA PARA LA CLASE "game"
-    logic_admin *admin = new logic_admin(vida, nivel, cont_e, enter, win, game_over, font);
+    logic_admin *admin = new logic_admin(cont_e, enter, win, game_over, font, sharedStates);
 
     // Llamado a proceso prepapar() de la clase game, inicializado en "j1" para limpiar valores residuales posiblemente almacenados en memoria que utilizan el jugador, los enemigos y el juego en general
     admin->preparar();
@@ -212,7 +201,7 @@ void juego()
     bool salir = false;
 
     // Mientras salir=false (no se ha presionado "ESC" y nivel no sea "0" (no se perdido el juego/nivel)
-    while (salir == false && nivel >= 1)
+    while (salir == false && userGameData.nivel >= 1)
     {
         // Llamar a "mostrar()" que visualizar� todo en pantalla (enemigos y sus disparos, fondo, jugador y sus disparos, contadores de vida, enemigos, disparos)
         admin->mostrar();

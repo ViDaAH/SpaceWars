@@ -9,6 +9,8 @@
 #include <cstdlib>
 #include <iostream>
 #include <time.h>
+#include "userGameData.h"
+#include "SharedStates.h"
 
 using namespace std;
 
@@ -21,7 +23,8 @@ private:
     ALLEGRO_BITMAP *g_o = al_load_bitmap("recursos/juego/lost.png");    // Imagen para la pantalla al perder el juego
     ALLEGRO_BITMAP *won = al_load_bitmap("recursos/juego/won.png");     // Imagen para la pantalla al finalizar el juego (completarlo)
     ALLEGRO_FONT *font;
-    int nivel = 0, vida = 0;
+    UserGameData userGameData;
+    SharedStates *sharedStates;
     int cont_e;
     bool enter = false;
     bool win, game_over;
@@ -59,10 +62,12 @@ private:
 public:
     // Manejo y reestablecimiento de las variables para el juego (dentro de la ejecuci�n de este)
 
-    logic_admin(int vida, int nivel, int cont_e, bool enter, bool win, bool game_over, ALLEGRO_FONT *font)
+    logic_admin(int cont_e, bool enter, bool win, bool game_over, ALLEGRO_FONT *font, SharedStates *sharedStates)
     {
-        this->vida = vida;
-        this->nivel = nivel;
+        this->sharedStates = sharedStates;
+        sharedStates->readUserGameData();
+        this->userGameData.vida = sharedStates->getUserGameData().vida;
+        this->userGameData.nivel = sharedStates->getUserGameData().nivel;
         this->cont_e = cont_e;
         this->enter = enter;
         this->win = win;
@@ -75,7 +80,7 @@ public:
         game_over = false;
         win = false;
         enter = false;
-        switch (nivel)
+        switch (userGameData.nivel)
         {
         case 1:
             cont_e = 40;
@@ -123,10 +128,10 @@ public:
                 (posy_d_e[e] >= posy && posy_d_e[e] <= posy + 77))
             {
                 posy_d_e[e] = -1100;
-                vida -= 25;
+                userGameData.vida -= 25;
             }
         }
-        if (vida == 0)
+        if (userGameData.vida == 0)
         {
             game_over = true;
         }
@@ -204,11 +209,9 @@ public:
         if (game_over == true)
         {
             // Se establecen los valores de vida y nivel en 0 (dentro del archivo) para que en menu() se reestablezcan nuevamente a 1, 500
-            ofstream archivo_e;
-            archivo_e.open("recursos/informacion.txt", ios::out);
-            archivo_e << "0"
-                      << " "
-                      << "0" << endl;
+            sharedStates->createEspecificUserGameData(0, 0);
+            userGameData.nivel = 0;
+            userGameData.vida = 0;
 
             // Mostrar imagen de "GAME OVER" por 5 segundos
             for (int e = 0; e <= 4; e++)
@@ -217,41 +220,19 @@ public:
                 al_flip_display();
                 al_rest(1);
             }
-            nivel = 0; // Se establece Nivel en 0 debido a que en contadores no se vuelve a leer el archivo por lo que, al evaluar en que nivel se est�, requiere una re definici�n. En este caso, nivel=0;
             return "game_over";
         }
 
         // Si se ha ganado el juego (nivel)
         if (win == true)
         {
-            // Variable para reescribir el archivo seg�n el punto y progreso actual
-            ofstream archivo_e_n;
 
-            // evaluando seg�n nivel
-            switch (nivel)
+            // evaluando segun nivel
+            if (userGameData.nivel == 3)
             {
-            case 1:
-                // Si el nivel es 1 y se ha ganado. Se reescribe el archivo ahora con NIVEL=2 y la VIDA=(vida que se tenga actualmente)
-                archivo_e_n.open("recursos/informacion.txt", ios::out);
-                archivo_e_n << "2"
-                            << " "
-                            << vida << endl;
-                nivel = 2; // Misma l�gica que cuando se pierde, se establece el nivel en 0; en este caso: Nivel=2;
-                break;
-
-            case 2:
-                archivo_e_n.open("recursos/informacion.txt", ios::out);
-                archivo_e_n << "3"
-                            << " " << vida << endl;
-                nivel = 3;
-                break;
-
-            case 3:
                 // SI SE HA COMPLETADO EL JUEGO (NIVEL 3)
                 // Establecer el nivel en 1 (ya que no hay m�s) e igual con vida=500
-                archivo_e_n.open("recursos/informacion.txt", ios::out);
-                archivo_e_n << "1"
-                            << " " << 500 << endl;
+                sharedStates->createEspecificUserGameData(1, 500);
                 // Mostrar imagen "FELICIDADES, HAS FINALIZADO EL JUEGO" por 7 Segundos
                 for (int e = 0; e <= 6; e++)
                 {
@@ -260,8 +241,11 @@ public:
                     al_rest(1);
                 }
                 // Se escribe 0 el nivel para que, al momento de regresar a "contadores()" se muestre el contador neutral
-                nivel = 0;
-                break;
+                userGameData.nivel = 0;
+            }
+            else
+            {
+                sharedStates->createEspecificUserGameData(userGameData.nivel + 1, userGameData.vida);
             }
             return "won"; // Regresar a contadores
         }
@@ -430,7 +414,7 @@ public:
 
             if (vida_e[e] == 100)
             {
-                al_draw_bitmap(enemigos[nivel - 1], posx_n_e[e], posy_n_e[e], 0);
+                al_draw_bitmap(enemigos[userGameData.nivel - 1], posx_n_e[e], posy_n_e[e], 0);
             }
             if (vida_e[e] == 100 && posy_d_e[e] == -1100)
             {
@@ -471,7 +455,7 @@ public:
                          30,
                          NULL,
                          ("Enemigos Restantes " + to_string(cont_e)).c_str());
-            al_draw_text(font, al_map_rgb(64, 224, 208), 0, 60, NULL, ("Vida " + to_string(vida)).c_str());
+            al_draw_text(font, al_map_rgb(64, 224, 208), 0, 60, NULL, ("Vida " + to_string(userGameData.vida)).c_str());
         }
         // Si se ha ganado o perdido, Llamar a "g_over()" donde se ejecutar� seg�n el caso, las instrucciones necesarias
         else if (win == true || game_over == true)
