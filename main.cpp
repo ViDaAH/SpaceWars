@@ -5,8 +5,8 @@
 #include <string>
 #include <iostream>
 #include "logic_admin.h"
-#include "SharedStates.h"
-#include "userGameData.h"
+#include "utils/SharedStates.h"
+#include "data/userGameData.h"
 
 using namespace std;
 
@@ -33,12 +33,8 @@ int botons_w = 195;
 int botons_h = 95;
 int x = 0 , y = 0;
 ALLEGRO_BITMAP* menu_imagen[3];
-ALLEGRO_BITMAP* Cont_init1[4];
-ALLEGRO_BITMAP* Cont_init2[4];
-ALLEGRO_BITMAP* Cont_init3[4];
-ALLEGRO_BITMAP* Cont[3];
-ALLEGRO_BITMAP** cont_Init;
-int cont_en;
+ALLEGRO_BITMAP* img_contador_inicial_nvl[4][4];
+int cantidad_enemigos;
 bool win , game_over;
 
 void iniciador( )
@@ -60,27 +56,28 @@ void iniciador( )
     menu_imagen[2] = al_load_bitmap("recursos/menu/Menu_SpaceWars_Salir.png");
 
     // DECLARACION DE VARIABLES PARA IMAGENES DE CONTADOR INICIAL, NIVEL 1
-    Cont_init1[0] = al_load_bitmap("recursos/Contadores/Inicial/nivel1/1.png");
-    Cont_init1[1] = al_load_bitmap("recursos/Contadores/Inicial/nivel1/2.png");
-    Cont_init1[2] = al_load_bitmap("recursos/Contadores/Inicial/nivel1/3.png");
-    Cont_init1[3] = al_load_bitmap("recursos/Contadores/Inicial/nivel1/1_1.png");
+    img_contador_inicial_nvl[1][0] = al_load_bitmap("recursos/Contadores/Inicial/nivel1/1.png");
+    img_contador_inicial_nvl[1][1] = al_load_bitmap("recursos/Contadores/Inicial/nivel1/2.png");
+    img_contador_inicial_nvl[1][2] = al_load_bitmap("recursos/Contadores/Inicial/nivel1/3.png");
+    img_contador_inicial_nvl[1][3] = al_load_bitmap("recursos/Contadores/Inicial/nivel1/1_1.png");
 
     // DECLARACI�N DE VARIABLES PARA IM�GENES DE CONTADOR INICIAL, NIVEL 2
-    Cont_init2[0] = al_load_bitmap("recursos/Contadores/Inicial/nivel2/1.png");
-    Cont_init2[1] = al_load_bitmap("recursos/Contadores/Inicial/nivel2/2.png");
-    Cont_init2[2] = al_load_bitmap("recursos/Contadores/Inicial/nivel2/3.png");
-    Cont_init2[3] = al_load_bitmap("recursos/Contadores/Inicial/nivel2/2_2.png");
+    img_contador_inicial_nvl[2][0] = al_load_bitmap("recursos/Contadores/Inicial/nivel2/1.png");
+    img_contador_inicial_nvl[2][1] = al_load_bitmap("recursos/Contadores/Inicial/nivel2/2.png");
+    img_contador_inicial_nvl[2][2] = al_load_bitmap("recursos/Contadores/Inicial/nivel2/3.png");
+    img_contador_inicial_nvl[2][3] = al_load_bitmap("recursos/Contadores/Inicial/nivel2/2_2.png");
 
     // DECLARACI�N DE VARIABLES PARA IM�GENES DE CONTADOR INICIAL, NIVEL 3
-    Cont_init3[0] = al_load_bitmap("recursos/Contadores/Inicial/nivel3/1.png");
-    Cont_init3[1] = al_load_bitmap("recursos/Contadores/Inicial/nivel3/2.png");
-    Cont_init3[2] = al_load_bitmap("recursos/Contadores/Inicial/nivel3/3.png");
-    Cont_init3[3] = al_load_bitmap("recursos/Contadores/Inicial/nivel3/3_3.png");
+    img_contador_inicial_nvl[3][0] = al_load_bitmap("recursos/Contadores/Inicial/nivel3/1.png");
+    img_contador_inicial_nvl[3][1] = al_load_bitmap("recursos/Contadores/Inicial/nivel3/2.png");
+    img_contador_inicial_nvl[3][2] = al_load_bitmap("recursos/Contadores/Inicial/nivel3/3.png");
+    img_contador_inicial_nvl[3][3] = al_load_bitmap("recursos/Contadores/Inicial/nivel3/3_3.png");
 
     // DECLARACI�N DE VARIABLES PARA IM�GENES DE CONTADOR GENERAL, PAUSA-REANUDACI�N
-    Cont[0] = al_load_bitmap("recursos/Contadores/gen/1.png");
-    Cont[1] = al_load_bitmap("recursos/Contadores/gen/2.png");
-    Cont[2] = al_load_bitmap("recursos/Contadores/gen/3.png");
+    img_contador_inicial_nvl[0][0] = al_load_bitmap("recursos/Contadores/gen/1.png");
+    img_contador_inicial_nvl[0][1] = al_load_bitmap("recursos/Contadores/gen/2.png");
+    img_contador_inicial_nvl[0][2] = al_load_bitmap("recursos/Contadores/gen/3.png");
+    img_contador_inicial_nvl[0][3] = al_load_bitmap("recursos/Contadores/gen/3.png"); //TODO FIX DUPLICATED RESOURCE LOADING BY CREATING A NEW ONE TO FILL THIS SPACE
     font = al_load_ttf_font("recursos/f.ttf" , 22 , 0);
 }
 
@@ -96,7 +93,13 @@ int main( )
 
 void menu( )
 {
-
+    enter = false;
+    if (userGameData.nivel == 0 && userGameData.vida == 500)
+    {
+        sharedStates->createDefaultUserGameData( );
+        sharedStates->readUserGameData( );
+        userGameData = sharedStates->getUserGameData( );
+    }
     while (enter == false) // Mientras que No se presione uno de los botones
     {
         al_get_mouse_state(&mouse_state); // OBTENCI�N DEL PUNTO EN QUE SE ENCUENTRA EL CURSOR EN PANTALLA
@@ -140,46 +143,22 @@ void contadores( )
 {
     sharedStates->readUserGameData( );
     userGameData = sharedStates->getUserGameData( );
-    switch (userGameData.nivel)
+    for (int i = 0; i <= 3; i++)
     {
-    case 1:
-        cont_en = 40;
-        cont_Init = Cont_init1;
-        break;
-    case 2:
-        cont_en = 45;
-        cont_Init = Cont_init2;
-        break;
-    case 3:
-        cont_en = 50;
-        cont_Init = Cont_init3;
-        break;
-    default:
-        cont_Init = Cont;
-        break;
+        al_draw_bitmap(img_contador_inicial_nvl[userGameData.nivel][i] , 0 , 0 , 0);
+        al_draw_text(font , al_map_rgb(255 , 77 , 111) , 1350 , 950 , NULL , ("Enemigos: " + to_string(cantidad_enemigos)).c_str( ));
+        al_draw_text(font , al_map_rgb(255 , 77 , 111) , 1350 , 980 , NULL , ("Vida: " + to_string(userGameData.vida)).c_str( ));
+        al_flip_display( );
+        al_rest(1);
     }
-    if (userGameData.nivel != 0 && userGameData.vida != 0)
-    {
-        for (int i = 0; i < 4; i++)
-        {
-            al_draw_bitmap(cont_Init[i] , 0 , 0 , 0);
-            al_draw_text(font , al_map_rgb(255 , 77 , 111) , 1350 , 950 , NULL , ("Enemigos: " + to_string(cont_en)).c_str( ));
-            al_draw_text(font , al_map_rgb(255 , 77 , 111) , 1350 , 980 , NULL , ("Vida: " + to_string(userGameData.vida)).c_str( ));
-            al_flip_display( );
-            al_rest(1);
-        }
-        juego( );
-    }
-
     if (userGameData.vida == 0 || userGameData.nivel == 0 || game_over == true)
     {
-        for (int i = 0; i <= 2; i++)
-        {
-            al_draw_bitmap(Cont[i] , 0 , 0 , 0);
-            al_flip_display( );
-            al_rest(1);
-        }
+        game_over = false;
         menu( );
+    }
+    else
+    {
+        juego( );
     }
 }
 
@@ -194,13 +173,25 @@ void juego( )
 
     // Variable para manejo de ejecucion del juego (para salir mediante ESC)
     bool salir = false;
+    string state = "";
 
     // Mientras salir=false (no se ha presionado "ESC" y nivel no sea "0" (no se perdido el juego/nivel)
     while (salir == false && userGameData.nivel >= 1)
     {
         // Llamar a "mostrar()" que visualizar� todo en pantalla (enemigos y sus disparos, fondo, jugador y sus disparos, contadores de vida, enemigos, disparos)
-        admin->mostrar( );
+        state = admin->mostrar( );
 
+        if (state == "end_cicle")
+        {
+            sharedStates->readUserGameData( );
+            userGameData = sharedStates->getUserGameData( );
+            if (userGameData.nivel == 0)
+            {
+                game_over = true;
+            }
+            contadores( );
+            break;
+        }
         // Si se presiona "ESC" del teclado, declarar "salir=true;" para que el bucle finalice y retorne a menu()". ESTO PUEDE SER TOMADO COMO UNA PAUSA, AUNQUE AL HACERLO, TENDR�S QUE VOLVER A JUGAR EL NIVEL ENTERO. NO SE VER�N AFECTADOS LOS DISPAROS DISPONIBLES NI LA VIDA (QUE YA SE TEN�A AL INICIAR EL NIVEL)
         if (al_key_down(&keyboard_state , ALLEGRO_KEY_ESCAPE))
         {

@@ -9,8 +9,8 @@
 #include <cstdlib>
 #include <iostream>
 #include <time.h>
-#include "userGameData.h"
-#include "SharedStates.h"
+#include "data/userGameData.h"
+#include "utils/SharedStates.h"
 
 using namespace std;
 
@@ -19,55 +19,55 @@ class logic_admin
 private:
     ALLEGRO_KEYBOARD_STATE keyboard_state;
     ALLEGRO_MOUSE_STATE mouse_state;
-    ALLEGRO_BITMAP *fondo = al_load_bitmap("recursos/juego/fondo.png"); // Imagen para el fondo del juego
-    ALLEGRO_BITMAP *g_o = al_load_bitmap("recursos/juego/lost.png");    // Imagen para la pantalla al perder el juego
-    ALLEGRO_BITMAP *won = al_load_bitmap("recursos/juego/won.png");     // Imagen para la pantalla al finalizar el juego (completarlo)
-    ALLEGRO_FONT *font;
+    ALLEGRO_BITMAP* fondo = al_load_bitmap("recursos/juego/fondo.png"); // Imagen para el fondo del juego
+    ALLEGRO_BITMAP* g_o = al_load_bitmap("recursos/juego/lost.png");    // Imagen para la pantalla al perder el juego
+    ALLEGRO_BITMAP* won = al_load_bitmap("recursos/juego/won.png");     // Imagen para la pantalla al finalizar el juego (completarlo)
+    ALLEGRO_FONT* font;
     UserGameData userGameData;
-    SharedStates *sharedStates;
+    SharedStates* sharedStates;
     int cont_e;
     bool enter = false;
-    bool win, game_over;
+    bool win , game_over;
     // VARIABLES JUGADOR
-    ALLEGRO_BITMAP *jugador = al_load_bitmap("recursos/juego/jugador/player1.png"); // Imagen de la nave del Jugador
-    double posx = 1920 / 2 - 77, posy = 1000;                                       // Variable para manejar la Posici�n del Jugador en pantalla (variar� seg�n el momento e instrucciones, la posici�n defininda inicialmente es para cuando el juego inicial)
-    double posx_min = 0, posx_max = 1843;                                           // L�mite (Muro invisible) de movimiento del jugador <<en este caso, en el eje X>>
-    double posy_min = 1000, posy_max = 700;                                         // L�mite (Muro invisible) de movimiento del jugador <<en este caso, en el eje Y>>
+    ALLEGRO_BITMAP* jugador = al_load_bitmap("recursos/juego/jugador/player1.png"); // Imagen de la nave del Jugador
+    double posx = 1920 / 2 - 77 , posy = 1000;                                       // Variable para manejar la Posici�n del Jugador en pantalla (variar� seg�n el momento e instrucciones, la posici�n defininda inicialmente es para cuando el juego inicial)
+    double posx_min = 0 , posx_max = 1843;                                           // L�mite (Muro invisible) de movimiento del jugador <<en este caso, en el eje X>>
+    double posy_min = 1000 , posy_max = 700;                                         // L�mite (Muro invisible) de movimiento del jugador <<en este caso, en el eje Y>>
     int mov = 0;                                                                    // Variable para regular el movimiento del jugador
 
     // VARIABLES DISPAROS
-    ALLEGRO_BITMAP *disparo_j = al_load_bitmap("recursos/juego/shot.png"); // Imagen del disparo del jugador
+    ALLEGRO_BITMAP* disparo_j = al_load_bitmap("recursos/juego/shot.png"); // Imagen del disparo del jugador
     bool disparo_activo = false;                                           // Variables para regular el retraso entre los disparos del jugador
     int d = 0;                                                             // Variable para regular que los disparos realizados por ronda sean equivalentes a los regulados por "cantdm"
-    int posx_d[5] = {-100, -100, -100, -100, -100};                        // Disparo en x
-    int posy_d[5] = {-100, -100, -100, -100, -100};                        // Disparo en y
+    int posx_d[5] = { -100, -100, -100, -100, -100 };                        // Disparo en x
+    int posy_d[5] = { -100, -100, -100, -100, -100 };                        // Disparo en y
     int cantdm = 0;                                                        // Cantidad de disparos m�ximos (se definir� seg�n el nivel en que se est�
     int contador;                                                          // Variable para manejar los disparos totales realizados por el jugador
 
     // VARIABLES ENEMIGOS
-    ALLEGRO_BITMAP *enemigos[3] = {al_load_bitmap("recursos/juego/enemigos/1_1.png"), // Imagen de naves enemigas [0]: nivel 1, [1]: nivel 2, [2]: nivel 3
+    ALLEGRO_BITMAP* enemigos[3] = { al_load_bitmap("recursos/juego/enemigos/1_1.png"), // Imagen de naves enemigas [0]: nivel 1, [1]: nivel 2, [2]: nivel 3
                                    al_load_bitmap("recursos/juego/enemigos/2_2.png"),
-                                   al_load_bitmap("recursos/juego/enemigos/3_3.png")};
+                                   al_load_bitmap("recursos/juego/enemigos/3_3.png") };
 
     double posx_n_e[5];                                                      // Nave en x
     double posy_n_e[5];                                                      // Nave en y
     int posx_d_e[5];                                                         // Disparo en x
     int posy_d_e[5];                                                         // Disparo en y
-    int ancho_x = 75, alto_y = 75;                                           // Tama�o en x, y. De las naves enemigas
-    int cont_enemigos = 0, vida_e[5], m_e;                                   // Vida de las 5 naves que se deber�n representar en cada "ronda"
-    double mov_ex[5], mov_ey[5];                                             // Movimiento inicial de las naves enemigas mientra "inic" est� activa y ascx/ascy/dscx/dscy est�n desactivadas
-    bool ascx[5], dscx[5], ascy[5], dscy[5], inic;                           // Movimiento de las naves dependiendo de la posici�n de las naves enemigos respecto a los bordes
-    ALLEGRO_BITMAP *disparo_e = al_load_bitmap("recursos/juego/shot_e.png"); // Imagen de Disparo para naves enemigas
+    int ancho_x = 75 , alto_y = 75;                                           // Tama�o en x, y. De las naves enemigas
+    int cont_enemigos = 0 , vida_e[5] , m_e;                                   // Vida de las 5 naves que se deber�n representar en cada "ronda"
+    double mov_ex[5] , mov_ey[5];                                             // Movimiento inicial de las naves enemigas mientra "inic" est� activa y ascx/ascy/dscx/dscy est�n desactivadas
+    bool ascx[5] , dscx[5] , ascy[5] , dscy[5] , inic;                           // Movimiento de las naves dependiendo de la posici�n de las naves enemigos respecto a los bordes
+    ALLEGRO_BITMAP* disparo_e = al_load_bitmap("recursos/juego/shot_e.png"); // Imagen de Disparo para naves enemigas
 
 public:
     // Manejo y reestablecimiento de las variables para el juego (dentro de la ejecuci�n de este)
 
-    logic_admin(int cont_e, bool enter, bool win, bool game_over, ALLEGRO_FONT *font, SharedStates *sharedStates)
+    logic_admin(int cont_e , bool enter , bool win , bool game_over , ALLEGRO_FONT* font , SharedStates* sharedStates)
     {
         this->sharedStates = sharedStates;
-        sharedStates->readUserGameData();
-        this->userGameData.vida = sharedStates->getUserGameData().vida;
-        this->userGameData.nivel = sharedStates->getUserGameData().nivel;
+        sharedStates->readUserGameData( );
+        this->userGameData.vida = sharedStates->getUserGameData( ).vida;
+        this->userGameData.nivel = sharedStates->getUserGameData( ).nivel;
         this->cont_e = cont_e;
         this->enter = enter;
         this->win = win;
@@ -75,7 +75,7 @@ public:
         this->font = font;
     }
 
-    void preparar()
+    void preparar( )
     {
         game_over = false;
         win = false;
@@ -120,7 +120,7 @@ public:
     }
 
     // Manejo de movimientos del jugador y sus disparos (en base a "mov" y a "cantdm")
-    void player()
+    void player( )
     {
         for (int e = 0; e <= 4; e += 1)
         {
@@ -136,34 +136,34 @@ public:
             game_over = true;
         }
         // Movimiento JUGADOR
-        if (!(al_key_down(&keyboard_state, ALLEGRO_KEY_RIGHT)) && !(al_key_down(&keyboard_state, ALLEGRO_KEY_LEFT)) &&
-            !al_key_down(&keyboard_state, ALLEGRO_KEY_UP) && !al_key_down(&keyboard_state, ALLEGRO_KEY_DOWN))
+        if (!(al_key_down(&keyboard_state , ALLEGRO_KEY_RIGHT)) && !(al_key_down(&keyboard_state , ALLEGRO_KEY_LEFT)) &&
+            !al_key_down(&keyboard_state , ALLEGRO_KEY_UP) && !al_key_down(&keyboard_state , ALLEGRO_KEY_DOWN))
         {
-            al_draw_bitmap(jugador, posx, posy, 0);
+            al_draw_bitmap(jugador , posx , posy , 0);
         }
-        if (al_key_down(&keyboard_state, ALLEGRO_KEY_RIGHT) && posx <= posx_max)
+        if (al_key_down(&keyboard_state , ALLEGRO_KEY_RIGHT) && posx <= posx_max)
         {
-            al_draw_bitmap(jugador, posx += mov, posy, 0);
+            al_draw_bitmap(jugador , posx += mov , posy , 0);
         }
-        if (al_key_down(&keyboard_state, ALLEGRO_KEY_LEFT) && posx >= posx_min)
+        if (al_key_down(&keyboard_state , ALLEGRO_KEY_LEFT) && posx >= posx_min)
         {
-            al_draw_bitmap(jugador, posx -= mov, posy, 0);
+            al_draw_bitmap(jugador , posx -= mov , posy , 0);
         }
 
-        if (al_key_down(&keyboard_state, ALLEGRO_KEY_UP) && posy >= posy_max)
+        if (al_key_down(&keyboard_state , ALLEGRO_KEY_UP) && posy >= posy_max)
         {
-            al_draw_bitmap(jugador, posx, posy -= mov, 0);
+            al_draw_bitmap(jugador , posx , posy -= mov , 0);
         }
-        if (al_key_down(&keyboard_state, ALLEGRO_KEY_DOWN) && posy <= posy_min)
+        if (al_key_down(&keyboard_state , ALLEGRO_KEY_DOWN) && posy <= posy_min)
         {
-            al_draw_bitmap(jugador, posx, posy += mov, 0);
+            al_draw_bitmap(jugador , posx , posy += mov , 0);
         }
 
         // DISPARO
         if (d != cantdm)
         {
 
-            if (al_key_down(&keyboard_state, ALLEGRO_KEY_SPACE) && !disparo_activo)
+            if (al_key_down(&keyboard_state , ALLEGRO_KEY_SPACE) && !disparo_activo)
             {
                 posx_d[d] = posx + 37;
                 posy_d[d] = posy - 66;
@@ -174,7 +174,7 @@ public:
             }
             if (contador > 0 && win == false)
             {
-                if (!al_key_down(&keyboard_state, ALLEGRO_KEY_SPACE))
+                if (!al_key_down(&keyboard_state , ALLEGRO_KEY_SPACE))
                 {
                     disparo_activo = false;
                 }
@@ -188,7 +188,7 @@ public:
             {
                 if (posy_d[c] > -66)
                 {
-                    al_draw_bitmap(disparo_j, posx_d[c], posy_d[c] -= 2, 1);
+                    al_draw_bitmap(disparo_j , posx_d[c] , posy_d[c] -= 2 , 1);
                 }
             }
             if (d == cantdm && posy_d[cantdm - 1] < -60)
@@ -203,41 +203,39 @@ public:
     }
 
     // Proceso para Finalizaci�n del Nivel en base a variables "game_over" o "win"
-    string g_over()
+    void g_over( )
     {
         // Si se ha perdido el juego (por gastar las municiones o por vida=0
         if (game_over == true)
         {
             // Se establecen los valores de vida y nivel en 0 (dentro del archivo) para que en menu() se reestablezcan nuevamente a 1, 500
-            sharedStates->createEspecificUserGameData(0, 0);
+            sharedStates->createEspecificUserGameData(0 , 500);
             userGameData.nivel = 0;
             userGameData.vida = 0;
 
             // Mostrar imagen de "GAME OVER" por 5 segundos
             for (int e = 0; e <= 4; e++)
             {
-                al_draw_bitmap(g_o, 0, 0, 0);
-                al_flip_display();
+                al_draw_bitmap(g_o , 0 , 0 , 0);
+                al_flip_display( );
                 al_rest(1);
             }
-            return "game_over";
         }
 
         // Si se ha ganado el juego (nivel)
         if (win == true)
         {
-
             // evaluando segun nivel
             if (userGameData.nivel == 3)
             {
                 // SI SE HA COMPLETADO EL JUEGO (NIVEL 3)
                 // Establecer el nivel en 1 (ya que no hay m�s) e igual con vida=500
-                sharedStates->createEspecificUserGameData(1, 500);
+                sharedStates->createEspecificUserGameData(0 , 500);
                 // Mostrar imagen "FELICIDADES, HAS FINALIZADO EL JUEGO" por 7 Segundos
                 for (int e = 0; e <= 6; e++)
                 {
-                    al_draw_bitmap(won, 0, 0, 0);
-                    al_flip_display();
+                    al_draw_bitmap(won , 0 , 0 , 0);
+                    al_flip_display( );
                     al_rest(1);
                 }
                 // Se escribe 0 el nivel para que, al momento de regresar a "contadores()" se muestre el contador neutral
@@ -245,14 +243,13 @@ public:
             }
             else
             {
-                sharedStates->createEspecificUserGameData(userGameData.nivel + 1, userGameData.vida);
+                sharedStates->createEspecificUserGameData(userGameData.nivel + 1 , userGameData.vida);
             }
-            return "won"; // Regresar a contadores
         }
     }
 
     // Manejo de movimientos, vida y disparos de las naves enemigas
-    void enemigo()
+    void enemigo( )
     {
         for (int e = 0; e <= 4; e += 1)
         {
@@ -261,22 +258,22 @@ public:
                 for (int f = 0; f <= 4; f += 1)
                 {
                     vida_e[f] = 100;
-                    if (rand() % 2 == 1)
+                    if (rand( ) % 2 == 1)
                     {
-                        posx_n_e[f] = 960 + rand() % 500;
-                        posy_n_e[f] = 200 + rand() % 200;
+                        posx_n_e[f] = 960 + rand( ) % 500;
+                        posy_n_e[f] = 200 + rand( ) % 200;
                     }
                     else
                     {
-                        posx_n_e[f] = 960 + rand() % 500 - 500;
-                        posy_n_e[f] = 200 + rand() % 200 - 200;
+                        posx_n_e[f] = 960 + rand( ) % 500 - 500;
+                        posy_n_e[f] = 200 + rand( ) % 200 - 200;
                     }
 
-                    if ((rand() % 2) == 1)
+                    if ((rand( ) % 2) == 1)
                     {
                         mov_ex[f] *= -1;
                     }
-                    if ((rand() % 2) == 0)
+                    if ((rand( ) % 2) == 0)
                     {
                         mov_ey[e] *= -1;
                     }
@@ -355,10 +352,10 @@ public:
             for (int i = 0; i <= 4; i += 1)
             {
                 if (i != e && ((posx_n_e[i] == posx_n_e[e] && posy_n_e[i] == posy_n_e[e]) ||
-                               ((((1850 - posx_n_e[i]) - (1850 - posx_n_e[e])) <= 100) ||
-                                (((1850 - posx_n_e[i]) + (1850 - posx_n_e[e])) <= 100) ||
-                                (((400 - posy_n_e[i]) - (400 - posy_n_e[e])) <= 100) ||
-                                (((400 - posy_n_e[i]) + (400 - posy_n_e[e])) <= 100))))
+                    ((((1850 - posx_n_e[i]) - (1850 - posx_n_e[e])) <= 100) ||
+                        (((1850 - posx_n_e[i]) + (1850 - posx_n_e[e])) <= 100) ||
+                        (((400 - posy_n_e[i]) - (400 - posy_n_e[e])) <= 100) ||
+                        (((400 - posy_n_e[i]) + (400 - posy_n_e[e])) <= 100))))
                 {
                     if (ascx[i] == true)
                     {
@@ -414,7 +411,7 @@ public:
 
             if (vida_e[e] == 100)
             {
-                al_draw_bitmap(enemigos[userGameData.nivel - 1], posx_n_e[e], posy_n_e[e], 0);
+                al_draw_bitmap(enemigos[userGameData.nivel - 1] , posx_n_e[e] , posy_n_e[e] , 0);
             }
             if (vida_e[e] == 100 && posy_d_e[e] == -1100)
             {
@@ -423,7 +420,7 @@ public:
             }
             if (posy_d_e[e] <= 1100 && posy_d_e[e] > 10)
             {
-                al_draw_bitmap(disparo_e, posx_d_e[e], posy_d_e[e] += 2, 0);
+                al_draw_bitmap(disparo_e , posx_d_e[e] , posy_d_e[e] += 2 , 0);
             }
             else
             {
@@ -433,36 +430,40 @@ public:
     }
 
     // Muestra todas los elementos en pantalla
-    void mostrar()
+    string mostrar( )
     {
+        cout << "Test";
         // Si no se ha ganado o perdido mostrar enemigos, jugador, etc. En pantalla
         if (win == false && game_over == false)
         {
-            al_draw_bitmap(fondo, 0, 0, 0);         // Dibujar el fondo en pantalla
+            cout << "Is this being showed";
+            al_draw_bitmap(fondo , 0 , 0 , 0);         // Dibujar el fondo en pantalla
             al_get_keyboard_state(&keyboard_state); // Obtenci�n de l estado del teclado (que tecla se est� presionando)
-            player();
-            enemigo();
+            player( );
+            enemigo( );
             // Mostrar contadores de vida, enemigos restantes y disparos restantes (jugador)
-            al_draw_text(font,
-                         al_map_rgb(100, 255, 177),
-                         0,
-                         0,
-                         NULL,
-                         ("Disparos Restantes " + to_string(contador)).c_str());
-            al_draw_text(font,
-                         al_map_rgb(255, 77, 111),
-                         0,
-                         30,
-                         NULL,
-                         ("Enemigos Restantes " + to_string(cont_e)).c_str());
-            al_draw_text(font, al_map_rgb(64, 224, 208), 0, 60, NULL, ("Vida " + to_string(userGameData.vida)).c_str());
+            al_draw_text(font ,
+                         al_map_rgb(100 , 255 , 177) ,
+                         0 ,
+                         0 ,
+                         NULL ,
+                         ("Disparos Restantes " + to_string(contador)).c_str( ));
+            al_draw_text(font ,
+                         al_map_rgb(255 , 77 , 111) ,
+                         0 ,
+                         30 ,
+                         NULL ,
+                         ("Enemigos Restantes " + to_string(cont_e)).c_str( ));
+            al_draw_text(font , al_map_rgb(64 , 224 , 208) , 0 , 60 , NULL , ("Vida " + to_string(userGameData.vida)).c_str( ));
         }
         // Si se ha ganado o perdido, Llamar a "g_over()" donde se ejecutar� seg�n el caso, las instrucciones necesarias
         else if (win == true || game_over == true)
         {
-            g_over();
+            g_over( );
+            return "end_cicle";
         }
         // Actualizaci�n de pantalla
-        al_flip_display();
+        al_flip_display( );
+        return "";
     }
 };

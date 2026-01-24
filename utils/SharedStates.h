@@ -1,6 +1,6 @@
 #pragma once
 #include <fstream>
-#include "userGameData.h"
+#include "../data/userGameData.h"
 using namespace std;
 
 class SharedStates
@@ -14,25 +14,25 @@ private:
 
 public:
     UserGameData userModel;
-    SharedStates()
+    SharedStates( )
     {
         vida = 0;
         nivel = 0;
     }
 
-    bool createDefaultUserGameData()
+    bool createDefaultUserGameData( )
     {
         try
         {
             ofstream archivo_e; // Variable para escritura de datos del archivo
-            archivo_e.open("recursos/informacion.txt", ios::out);
+            archivo_e.open("recursos/informacion.txt" , ios::out);
             archivo_e << "1"
-                      << " "
-                      << "500" << endl;
+                << " "
+                << "500" << endl;
             userGameData.nivel = 1;
             userGameData.vida = 500;
 
-            archivo_e.close(); // Cerrar archivo de escritura
+            archivo_e.close( ); // Cerrar archivo de escritura
             return true;
         }
         catch (...)
@@ -41,17 +41,17 @@ public:
         }
     }
 
-    void readUserGameData()
+    void readUserGameData( )
     {
         try
         {
             ifstream archivo_l;                                               // Variable para lectura de datos del archivo
-            archivo_l.open("recursos/informacion.txt", ios::in);              // Abrir el Archivo "informacion.txt" en modalidad de entrada de datos
+            archivo_l.open("recursos/informacion.txt" , ios::in);              // Abrir el Archivo "informacion.txt" en modalidad de entrada de datos
             archivo_l >> this->userGameData.nivel >> this->userGameData.vida; // Almacenamiento de datos en el archivo, dentro de las variables locales
             if (this->userGameData.vida == 0)                                 // Si la vida es 0, se reestablecen a los valores iniciales predeterminados y almacenarlos en el archivo
             {
-                archivo_l.close(); // Cerrar archivo de lectura
-                createDefaultUserGameData();
+                archivo_l.close( ); // Cerrar archivo de lectura
+                createDefaultUserGameData( );
             }
         }
         catch (...)
@@ -60,24 +60,24 @@ public:
         }
     }
 
-    UserGameData getUserGameData()
+    UserGameData getUserGameData( )
     {
         return userGameData;
     }
 
-    bool createEspecificUserGameData(int nivel, int vida)
+    bool createEspecificUserGameData(int nivel , int vida)
     {
         try
         {
             ofstream archivo_e; // Variable para escritura de datos del archivo
-            archivo_e.open("recursos/informacion.txt", ios::out);
+            archivo_e.open("recursos/informacion.txt" , ios::out);
             archivo_e << nivel
-                      << " "
-                      << vida << endl;
+                << " "
+                << vida << endl;
             userGameData.nivel = nivel;
             userGameData.vida = vida;
 
-            archivo_e.close(); // Cerrar archivo de escritura
+            archivo_e.close( ); // Cerrar archivo de escritura
             return true;
         }
         catch (...)
