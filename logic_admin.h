@@ -432,11 +432,9 @@ public:
     // Muestra todas los elementos en pantalla
     string mostrar( )
     {
-        cout << "Test";
         // Si no se ha ganado o perdido mostrar enemigos, jugador, etc. En pantalla
         if (win == false && game_over == false)
         {
-            cout << "Is this being showed";
             al_draw_bitmap(fondo , 0 , 0 , 0);         // Dibujar el fondo en pantalla
             al_get_keyboard_state(&keyboard_state); // Obtenci�n de l estado del teclado (que tecla se est� presionando)
             player( );
